@@ -1,0 +1,20 @@
+{
+    "name": "nekgod/php-redis",
+    "autoload": {
+        "psr-4": {
+            "phpRedis\\": "core/"
+        }
+    },
+    "authors": [
+        {
+            "name": "NEKGod",
+            "email": "1559096467@qq.com"
+        }
+    ],
+    "require": {
+        "ext-event": "*",
+        "ext-sockets": "*",
+        "ext-mbstring": "*",
+        "ext-pcntl": "*"
+    }
+}

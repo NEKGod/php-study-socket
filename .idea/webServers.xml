@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="ee8c3686-660d-4253-a8eb-608697629128" name="dev" url="http://localhost">
+        <fileTransfer rootFolder="/study/php-redis" accessType="SFTP" host="192.168.79.128" port="22" sshConfigId="7e0f2600-8435-47fc-a786-56a1b25bb00e" sshConfig="root@192.168.79.128:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
