@@ -5,6 +5,7 @@ namespace phpRedis;
 use Event;
 use phpRedis\event\EventServer;
 use phpRedis\library\Parse;
+use phpRedis\library\Proc;
 
 class Service
 {
@@ -15,6 +16,11 @@ class Service
      * @var \phpRedis\event\EventServer
      */
     private $event;
+    /**
+     * @var \phpRedis\library\Proc
+     */
+    private $proc;
+
 
     /**
      * @throws \Exception
@@ -23,29 +29,20 @@ class Service
     {
         $this->url_bind = $this->parseUrl($url_bind);
         $this->setEvent(EventServer::getSingle());
+        $this->setProc(Proc::getSingle());
+
     }
 
     public function start()
     {
-//        $this->startWorker();
-        $this->startWorker();
+        $pid = $this->getProc()->startChildProc(1);
+        $pid = $this->getProc()->startChildProc(2);
+        $this->getProc()->setProcMain();
     }
 
-    public function startWorker()
+    public function startProc()
     {
-        $pid = pcntl_fork();
-        var_dump($pid);
-        if ($pid == 0) {
-            echo "父进程".PHP_EOL;
-            $this->startServiceListenProc();
-        }else if ($pid > 0) {
-            pcntl_wait($status);
-            var_dump("子进程");
-            sleep(3);
-            var_dump($status);
-        }else {
 
-        }
         die;
     }
 
@@ -96,6 +93,22 @@ class Service
     public function setEvent(EventServer $event): void
     {
         $this->event = $event;
+    }
+
+    /**
+     * @return \phpRedis\library\Proc
+     */
+    public function getProc(): Proc
+    {
+        return $this->proc;
+    }
+
+    /**
+     * @param \phpRedis\library\Proc $proc
+     */
+    public function setProc(Proc $proc): void
+    {
+        $this->proc = $proc;
     }
 
 }

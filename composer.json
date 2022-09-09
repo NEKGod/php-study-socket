@@ -15,6 +15,7 @@
         "ext-event": "*",
         "ext-sockets": "*",
         "ext-mbstring": "*",
-        "ext-pcntl": "*"
+        "ext-pcntl": "*",
+        "ext-posix": "*"
     }
 }
