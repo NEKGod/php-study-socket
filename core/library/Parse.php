@@ -8,11 +8,14 @@ class Parse
 
     public static function bindAddress($bindAddress)
     {
-        $match = '/^(.*):\/\/(.*)\/(.*)/m';
-        preg_match_all($match, $bindAddress, $res);
-        array_combine(
-            ['head', 'domain', 'prot'],
-            []
+        $match = '/^(.*):\/\/([\w.]+)[:|\/|\?]?([0-9]+)?(.*)$/m';
+        preg_match($match, $bindAddress, $res);
+        if (!$res) {
+            throw new \Exception("解析错误");
+        }
+        return array_combine(
+            ['url', 'protocol', 'domain', 'port', 'uri'],
+            $res
         );
     }
 
