@@ -31,6 +31,9 @@ function msgReadListener($socket, $type = '')
 //            socket_send($socket, 'exit', strlen('exit'), MSG_EOR | MSG_EOF);
             break;
         }
+        if ($buf == 'exit') {
+            exit();
+        }
     }while($buf !== false);
 }
 

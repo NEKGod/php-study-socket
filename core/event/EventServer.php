@@ -20,17 +20,7 @@ class EventServer
     public function add($flags, $fd, $callable, $arg = null): bool
     {
         var_dump($flags);
-        $event = null;
-        switch ($flags) {
-            case \Event::READ:
-                $event = new Event($this->eventBase, $fd, Event::PERSIST | Event::READ, $callable, $arg);
-                break;
-            case \Event::WRITE:
-                break;
-        }
-        if (!$event) {
-            return false;
-        }
+        $event = new Event($this->eventBase, $fd, $flags, $callable, $arg);
         $event->add();
         $this->taskMap[(int) $fd] = $event;
         return true;

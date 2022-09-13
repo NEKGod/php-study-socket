@@ -35,28 +35,48 @@ class Service
 
     public function start()
     {
-        $pid = $this->getProc()->startChildProc(1);
-        $pid = $this->getProc()->startChildProc(2);
-        $this->getProc()->setProcMain();
+        print('当前id:' . $this->getProc()->getProcId() . "\r\n");
+        $this->forkMasterProc();
+        if ($this->getProc()->getProcId() == 'service') {
+            $this->getProc()->recycling();
+        }
+
     }
 
-    public function startProc()
+    private function forkWorkProc($args)
     {
+        $pid = $this->getProc()->startChildProc('work', [$this, 'clientLink'], $args);
+    }
 
-        die;
+    private function forkMasterProc()
+    {
+        $pid = $this->getProc()->startChildProc('master', [$this, 'startServiceListenProc']);
+    }
+
+
+    public function clientLink($args)
+    {
+        var_dump($args);
     }
 
     public function startServiceListenProc()
     {
         $service_socket = $this->listen($this->url_bind);
-        $this->getEvent()->add(Event::READ, $service_socket, function ($fd, $what, $args) {
-            var_dump($fd, $what, $args);
-            fclose($fd);
+        $this->getEvent()->add(Event::PERSIST | Event::READ, $service_socket, function ($fd, $what, $args) {
+            $client = stream_socket_accept($fd);
+            fclose($client);
+            $this->forkWorkProc(['fd' => $client]);
+            sleep(1);
 //            $client = stream_socket_accept($fd);
-//            var_dump($client);
 //            fputs($client, 'link ok');
 //            while (true) {
 //                $buf = fread($client, 4096);
+//                fputs($client, "ok");
+//                if ($buf == "") {
+//                    fputs($client, "exit");
+//                    fclose($client);
+//                    break;
+//                }
 //                var_dump($buf);
 //            }
         });
@@ -110,5 +130,7 @@ class Service
     {
         $this->proc = $proc;
     }
+
+
 
 }
