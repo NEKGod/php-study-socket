@@ -3,7 +3,9 @@
 namespace phpRedis;
 
 use Event;
+use phpRedis\command\CommandFactory;
 use phpRedis\event\EventServer;
+use phpRedis\handle\SetHandle;
 use phpRedis\library\Parse;
 use phpRedis\library\Proc;
 
@@ -35,6 +37,8 @@ class Service
 
     public function start()
     {
+        cli_set_process_title("php-redis");
+        SetHandle::getSingle();
         print('当前id:' . $this->getProc()->getProcId() . "\r\n");
         $this->forkMasterProc();
         if ($this->getProc()->getProcId() == 'service') {
@@ -43,44 +47,46 @@ class Service
 
     }
 
-    private function forkWorkProc($args)
+    private function forkWorkProc($args): void
     {
-        $pid = $this->getProc()->startChildProc('work', [$this, 'clientLink'], $args);
+        $this->getProc()->startChildProc('work', [$this, 'clientLink'], $args);
     }
 
-    private function forkMasterProc()
+    private function forkMasterProc(): void
     {
-        $pid = $this->getProc()->startChildProc('master', [$this, 'startServiceListenProc']);
+        $this->getProc()->startChildProc('master', [$this, 'startServiceListenProc']);
     }
 
 
     public function clientLink($args)
     {
-        var_dump($args);
+        $client = $args['fd'];
+        while (true) {
+            $buf = fread($client, 2048);
+            $buf = trim($buf);
+//            echo "client " . (int) $client . "\t" . 'msg -> ' . $buf . PHP_EOL;
+            $command = CommandFactory::execCommand($buf);
+            fputs($client, $command, strlen($command));
+            if (!$buf || $buf == 'exit') {
+                fclose($client);
+                exit(0);
+            }
+        }
     }
 
     public function startServiceListenProc()
     {
         $service_socket = $this->listen($this->url_bind);
-        $this->getEvent()->add(Event::PERSIST | Event::READ, $service_socket, function ($fd, $what, $args) {
-            $client = stream_socket_accept($fd);
-            fclose($client);
-            $this->forkWorkProc(['fd' => $client]);
-            sleep(1);
-//            $client = stream_socket_accept($fd);
-//            fputs($client, 'link ok');
-//            while (true) {
-//                $buf = fread($client, 4096);
-//                fputs($client, "ok");
-//                if ($buf == "") {
-//                    fputs($client, "exit");
-//                    fclose($client);
-//                    break;
-//                }
-//                var_dump($buf);
-//            }
-        });
-        $this->getEvent()->loop();
+        while (true) {
+            $client = @stream_socket_accept($service_socket);
+            if (!$client) {
+                continue;
+            }
+            echo "client connected to service". (int) $client.PHP_EOL;
+            $this->forkWorkProc([
+                'fd' => $client,
+            ]);
+        }
     }
 
     public function listen($url_bind)
@@ -88,7 +94,7 @@ class Service
         $context = stream_context_create(['socket' => ['backlog' => 2000]]);
         stream_context_set_option($context, 'socket', 'so_reuseaddr', 1); //设置连接重用
         $this->service_socket = stream_socket_server($url_bind['url'], $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $context);
-        stream_set_blocking($this->service_socket, false);//非阻塞
+        stream_set_blocking($this->service_socket, true);//非阻塞
         var_dump($this->service_socket);
         return $this->service_socket;
     }

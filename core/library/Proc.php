@@ -37,7 +37,6 @@ class Proc
             }
             sleep(mt_rand(1,3));
         }else{
-            cli_set_process_title("php-redis");
             $this->setChildrenProcPidMap($pid);
             $this->signal();
         }
